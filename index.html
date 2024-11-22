@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Aniversários</title>
+    <style>
+        body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #1a1a1a;
+    color: #00ffcc;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+header {
+    background-color: #1a1a1a;
+    color: #00ffcc;
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 0 10px #00ffcc;
+}
+
+.form-container {
+    background-color: #333;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #00ffcc;
+    width: 300px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 10px;
+    color: #00ffcc;
+}
+
+.form-container input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #00ffcc;
+    border-radius: 4px;
+    background-color: #444;
+    color: #00ffcc;
+}
+
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #00ffcc;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 10px #00ffcc;
+}
+
+.form-container button:hover {
+    background-color: #00e6b8;
+}
+
+table {
+    width: 80%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #333;
+    box-shadow: 0 0 10px #00ffcc;
+}
+
+table, th, td {
+    border: 1px solid #00ffcc;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    color: #00ffcc;
+}
+
+th {
+    background-color: #1a1a1a;
+}
+
+.edit-button {
+    background-color: #ff00ff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: 0 0 10px #ff00ff;
+}
+
+.edit-button:hover {
+    background-color: #e600e6;
+}
+
+.delete-button {
+    background-color: #ff3333;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: 0 0 10px #ff3333;
+}
+
+.delete-button:hover {
+    background-color: #e60000;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cadastro de Pessoas</h1>
+    </header>
+    <div class="form-container">
+        <form class="form js-form">
+            <label for="name">
+                Nome
+                <input class="form-field js-field" id="name" maxlength="120" name="name" required type="text">
+            </label>
+            <label for="birth-date">
+                Data de Nascimento
+                <input class="form-field js-field" id="birth-date" name="birth-date" required type="date">
+            </label>
+            <button type="submit">Salvar</button>
+        </form>
+    </div>
+
+    <h2>Lista de Pessoas</h2>
+    <table id="people-table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Data de Nascimento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dados serão inseridos aqui -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('.js-form');
+    const peopleTableBody = document.querySelector('#people-table tbody');
+    let editIndex = null;
+
+    // Função para salvar dados no localStorage
+    function savePerson(person) {
+        const people = JSON.parse(localStorage.getItem('people')) || [];
+        if (editIndex !== null) {
+            people[editIndex] = person;
+            editIndex = null;
+        } else {
+            people.push(person);
+        }
+        localStorage.setItem('people', JSON.stringify(people));
+    }
+
+    // Função para carregar dados do localStorage e exibir na tabela
+    function loadPeople() {
+        const people = JSON.parse(localStorage.getItem('people')) || [];
+        peopleTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar os dados
+        people.forEach((person, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${person.name}</td>
+                <td>${person.birthDate}</td>
+                <td>
+                    <button class="edit-button" data-index="${index}">Editar</button>
+                    <button class="delete-button" data-index="${index}">Remover</button>
+                </td>
+            `;
+            peopleTableBody.appendChild(row);
+        });
+
+        // Adiciona evento de clique aos botões de edição
+        document.querySelectorAll('.edit-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const index = event.target.getAttribute('data-index');
+                editPerson(index);
+            });
+        });
+
+        // Adiciona evento de clique aos botões de remoção
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const index = event.target.getAttribute('data-index');
+                deletePerson(index);
+            });
+        });
+    }
+
+    // Função para editar uma pessoa
+    function editPerson(index) {
+        const people = JSON.parse(localStorage.getItem('people')) || [];
+        const person = people[index];
+        document.querySelector('#name').value = person.name;
+        document.querySelector('#birth-date').value = person.birthDate;
+        editIndex = index;
+    }
+
+    // Função para remover uma pessoa
+    function deletePerson(index) {
+        const people = JSON.parse(localStorage.getItem('people')) || [];
+        people.splice(index, 1);
+        localStorage.setItem('people', JSON.stringify(people));
+        loadPeople();
+    }
+
+    // Carrega os dados ao carregar a página
+    loadPeople();
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Evita o envio do formulário
+
+        const name = document.querySelector('#name').value;
+        const birthDate = document.querySelector('#birth-date').value;
+
+        // Validação do nome
+        const namePattern = /^[A-Za-zÀ-ÿ\s]{3,120}$/;
+        if (!namePattern.test(name)) {
+            alert('O nome deve conter apenas letras e ter entre 3 e 120 caracteres.');
+            return;
+        }
+
+        // Validação da data de nascimento
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(birthDate)) {
+            alert('A data de nascimento deve estar no formato AAAA-MM-DD.');
+            return;
+        }
+
+        const person = { name, birthDate };
+        savePerson(person);
+        loadPeople();
+
+        form.reset(); // Limpa o formulário após salvar
+    });
+});
+    </script>
+</body>
+</html>
